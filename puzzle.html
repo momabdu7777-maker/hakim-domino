@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0d0f2b">
+<title>تركيب — ألغاز القطع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&amp;family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#f2c14e; --gold-2:#d4952b; --text:#f4f1ff; --muted:#aeb2dc;
+  --bg-a:#343a8f; --bg-b:#1b1e52; --bg-c:#0b0c24; --sheet:rgba(16,18,48,.94);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg-c);color:var(--text);
+  font-family:Tajawal,system-ui,sans-serif;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{position:fixed;inset:0;overflow:hidden;background:radial-gradient(ellipse 120% 85% at 50% 30%,var(--bg-a) 0%,var(--bg-b) 50%,var(--bg-c) 100%)}
+#app::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:34px 34px;-webkit-mask:radial-gradient(ellipse at 50% 40%,#000,transparent 75%);mask:radial-gradient(ellipse at 50% 40%,#000,transparent 75%)}
+.screen{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.screen.on{opacity:1;visibility:visible}
+
+/* ---------- القطع ---------- */
+.pc{position:absolute;filter:drop-shadow(0 .09em 0 rgba(0,0,0,.3)) drop-shadow(0 .16em .22em rgba(0,0,0,.28))}
+.pc i{position:absolute;width:1.01em;height:1.01em;background:linear-gradient(155deg,var(--c1),var(--c2));background-size:var(--W) var(--H)}
+.pc i.t.l{border-top-left-radius:.26em}.pc i.t.r{border-top-right-radius:.26em}
+.pc i.b.l{border-bottom-left-radius:.26em}.pc i.b.r{border-bottom-right-radius:.26em}
+.pc i::after{content:"";position:absolute;inset:.16em;border-radius:.2em;
+  background:linear-gradient(155deg,rgba(255,255,255,.42),rgba(255,255,255,.04) 62%);box-shadow:inset 0 -.03em .03em rgba(0,0,0,.14)}
+.pc.locked i::after{background:linear-gradient(155deg,rgba(255,255,255,.65),rgba(255,255,255,.1) 62%)}
+.pc.locked::after{content:"";position:absolute;inset:-.06em;border-radius:.3em;pointer-events:none}
+#tray .pc,#layer .pc{cursor:grab;touch-action:none}
+.dragging{position:fixed!important;z-index:200;pointer-events:none;
+  filter:drop-shadow(0 .12em 0 rgba(0,0,0,.25)) drop-shadow(0 .5em .6em rgba(0,0,0,.45));transform:scale(1.06);transform-origin:center}
+.pop{animation:popIn .5s cubic-bezier(.2,.9,.3,1.4) backwards;animation-delay:calc(var(--i) * 45ms)}
+@keyframes popIn{from{opacity:0;transform:scale(.2) rotate(-25deg)}}
+
+/* ---------- الأزرار ---------- */
+.btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:18px;padding:14px 20px;
+  font-weight:800;font-size:18px;color:#2b1902;background:linear-gradient(180deg,#ffe596 0%,#f5bd45 52%,#d68d1f 100%);
+  box-shadow:0 5px 0 #8a5a14,0 12px 26px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.75);transition:transform .12s,box-shadow .12s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #8a5a14,inset 0 1px 0 rgba(255,255,255,.75)}
+.btn.glass{color:var(--text);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 5px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)}
+.btn.glass:active{box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.ico{position:relative;width:44px;height:44px;flex:none;border-radius:14px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.13);
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.04));box-shadow:0 3px 0 rgba(0,0,0,.35);transition:transform .12s}
+.ico:active{transform:translateY(3px)}
+.ico svg{width:22px;height:22px;stroke:var(--text);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ico.gold svg{stroke:var(--gold)}
+.ico .badge{position:absolute;top:-6px;left:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#ff5d6c;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.ico .badge:empty{display:none}
+
+/* ---------- الرئيسية ---------- */
+.floaty{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.floaty .pc{animation:drift var(--d) linear infinite;animation-delay:var(--dl)}
+@keyframes drift{from{transform:translate(0,110vh) rotate(var(--r0))}to{transform:translate(var(--dx),-30vh) rotate(var(--r1))}}
+.hbar{position:relative;display:flex;justify-content:space-between;padding:12px 14px 0}
+.home-wrap{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;width:min(440px,100%);margin:0 auto;padding:0 20px calc(20px + env(safe-area-inset-bottom))}
+.logo{text-align:center}
+.logo-art{position:relative;width:96px;height:96px;margin:0 auto 12px;font-size:32px}
+.logo-art .pc{animation:assemble 4.2s cubic-bezier(.5,0,.2,1) infinite}
+@keyframes assemble{0%,8%{transform:translate(var(--dx),var(--dy)) rotate(var(--rr));opacity:0}30%,82%{transform:none;opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rr));opacity:0}}
+.logo h1{margin:0;font:400 72px/1 Lalezar,serif;background:linear-gradient(180deg,#fff6cf 0%,#f6cb5a 45%,#c47f17 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #3c2a70) drop-shadow(0 12px 18px rgba(0,0,0,.45))}
+.logo .sub{display:inline-block;margin-top:8px;padding:5px 14px;border-radius:99px;font-weight:700;font-size:14px;color:var(--gold);background:rgba(0,0,0,.25);border:1px solid rgba(242,193,78,.3)}
+.total{display:flex;justify-content:center;gap:10px}
+.chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.1);font-weight:800;font-size:14px}
+.chip svg{width:17px;height:17px}
+.diffs{display:flex;flex-direction:column;gap:12px}
+.dcard{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:22px;border:1px solid rgba(255,255,255,.12);text-align:right;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));box-shadow:0 5px 0 rgba(0,0,0,.35),0 14px 30px rgba(0,0,0,.25);transition:transform .12s}
+.dcard:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.dcard .art{width:58px;height:58px;flex:none;border-radius:18px;display:grid;place-items:center;position:relative;
+  background:linear-gradient(150deg,var(--d1),var(--d2));box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 6px 14px rgba(0,0,0,.3)}
+.dcard .art .pc{position:relative;font-size:12px;filter:drop-shadow(0 .1em 0 rgba(0,0,0,.25))}
+.dcard .info{flex:1;min-width:0}
+.dcard .info b{display:block;font:400 25px/1.1 Lalezar;color:var(--text)}
+.dcard .info span{font-size:12.5px;color:var(--muted)}
+.dcard .prog{height:7px;border-radius:99px;background:rgba(0,0,0,.35);margin-top:8px;overflow:hidden;position:relative}
+.dcard .prog em{position:absolute;top:0;bottom:0;right:0;border-radius:99px;background:linear-gradient(90deg,var(--d2),var(--d1))}
+.dcard .num{font:400 18px Lalezar;color:var(--muted);flex:none;text-align:center;line-height:1.1}
+.dcard .num small{display:block;font:700 11px Tajawal}
+
+/* ---------- المراحل ---------- */
+.top{display:flex;align-items:center;gap:10px;padding:10px 12px 8px;flex:none;position:relative;z-index:3}
+.ttl{flex:1;min-width:0;line-height:1.15}
+.ttl b{display:block;font:400 24px/1.1 Lalezar}
+.ttl span{font-size:12.5px;color:var(--muted)}
+.lv-scroll{flex:1;overflow-y:auto;padding:6px 16px calc(24px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.chap{display:flex;align-items:center;gap:10px;margin:18px 2px 10px;font-weight:800;color:var(--gold);font-size:14px}
+.chap::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(242,193,78,.4),transparent)}
+[dir=rtl] .chap::after{background:linear-gradient(270deg,rgba(242,193,78,.4),transparent)}
+.chap small{color:var(--muted);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:480px;margin:0 auto}
+.lv{aspect-ratio:1;border-radius:18px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;
+  background:linear-gradient(160deg,var(--d1),var(--d2));box-shadow:0 4px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.35);transition:transform .12s;
+  animation:popIn .4s cubic-bezier(.2,.9,.3,1.3) backwards;animation-delay:calc(var(--i) * 12ms)}
+.lv:active{transform:translateY(3px)}
+.lv b{font:400 22px/1 Lalezar;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.lv .st{display:flex;gap:1px}
+.lv .st svg{width:11px;height:11px}
+.lv.locked{background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.lv.locked b{opacity:.35}
+.lv.locked svg.lock{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
+.lv.cur{box-shadow:0 4px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.35),0 0 0 3px #fff,0 0 22px rgba(255,255,255,.55)}
+.lv.cur::after{content:"";position:absolute;inset:-6px;border-radius:22px;border:2px solid rgba(255,255,255,.6);animation:ring 1.4s ease-out infinite}
+@keyframes ring{from{opacity:1;transform:scale(.92)}to{opacity:0;transform:scale(1.18)}}
+
+/* ---------- اللعب ---------- */
+.timer{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:14px;background:rgba(0,0,0,.28);font:400 18px/1 Lalezar;direction:ltr;min-width:72px;justify-content:center}
+.timer svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2}
+.stage{flex:1;display:grid;place-items:center;min-height:0;position:relative}
+.board{position:relative}
+.bc{position:absolute;width:1em;height:1em}
+.bc::after{content:"";position:absolute;inset:.045em;border-radius:.2em;background:rgba(255,255,255,.07);
+  box-shadow:inset 0 .05em .1em rgba(0,0,0,.45),inset 0 -.02em 0 rgba(255,255,255,.06);transition:background .12s}
+.bc.pv::after{background:var(--pc);box-shadow:inset 0 0 0 .05em rgba(255,255,255,.7),0 0 .3em var(--pc)}
+.board::before{content:"";position:absolute;inset:-.28em;border-radius:.42em;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 .2em .6em rgba(0,0,0,.35)}
+#layer{position:absolute;inset:0}
+.tray{flex:none;position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;align-items:center;
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.3));border-top:1px solid rgba(255,255,255,.07)}
+.slot{position:relative;flex:none}
+.wave{animation:wave .7s ease both;animation-delay:var(--dl)}
+@keyframes wave{40%{filter:brightness(1.6) drop-shadow(0 0 .3em #fff);transform:scale(1.07)}}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+
+/* ---------- النوافذ والإشعارات ---------- */
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:150}
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.55);
+  opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.modal.on{opacity:1;visibility:visible}
+.sheet{width:min(400px,100%);border-radius:28px;padding:24px 20px 20px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),transparent 40%),var(--sheet);border:1px solid rgba(242,193,78,.25);
+  box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(30px) scale(.94);transition:transform .4s cubic-bezier(.2,.9,.3,1.25)}
+.modal.on .sheet{transform:none}
+.sheet h2{margin:0;font:400 38px/1.2 Lalezar;color:var(--gold)}
+.sheet p{color:var(--muted);margin:4px 0 14px}
+.stars{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin:6px 0 10px}
+.stars svg{width:62px;height:62px}
+.stars svg:nth-child(2){width:80px;height:80px;margin-bottom:10px}
+.stars .on{animation:starPop .55s cubic-bezier(.2,.9,.3,1.6) backwards}
+@keyframes starPop{from{transform:scale(0) rotate(-90deg)}}
+.res{display:flex;justify-content:center;gap:10px;margin-bottom:18px}
+.col{display:flex;flex-direction:column;gap:10px}
+.row2{display:flex;gap:10px}.row2 .btn{flex:1}
+#toast{position:fixed;left:50%;top:40%;z-index:120;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap}
+#toast div{font:400 30px/1.2 Lalezar;padding:8px 20px;border-radius:18px;color:#fff;background:rgba(0,0,0,.55);animation:toast 1.6s ease both}
+@keyframes toast{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.05)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+@media (max-height:660px){.logo h1{font-size:56px}.logo-art{width:72px;height:72px;font-size:24px}.dcard{padding:10px 14px}.home-wrap{gap:14px}}
+@media (prefers-reduced-motion:reduce){.floaty{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="home" class="screen on">
+    <div class="floaty" id="floaty"></div>
+    <div class="hbar">
+      <button class="ico" id="bToDomino" aria-label="الدومينو"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="ico" id="bSound" aria-label="الصوت"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="sndWave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
+    </div>
+    <div class="home-wrap">
+      <div class="logo"><div class="logo-art" id="logoArt"></div><h1>تركيب</h1><div class="sub">ألغاز القطع • ٣٠٠ مرحلة</div></div>
+      <div class="total" id="total"></div>
+      <div class="diffs" id="diffs"></div>
+    </div>
+  </section>
+
+  <section id="levels" class="screen">
+    <header class="top">
+      <button class="ico" id="bLvBack" aria-label="رجوع"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="ttl"><b id="lvTitle"></b><span id="lvSub"></span></div>
+      <div class="chip" id="lvStars"></div>
+    </header>
+    <div class="lv-scroll" id="lvScroll"></div>
+  </section>
+
+  <section id="play" class="screen">
+    <header class="top">
+      <button class="ico" id="bPlayBack" aria-label="رجوع"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="ttl"><b id="plTitle"></b><span id="plSub"></span></div>
+      <div class="timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M10 2h4"/></svg><span id="clock">0:00</span></div>
+      <button class="ico" id="bReset" aria-label="إعادة"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4h4"/></svg></button>
+      <button class="ico gold" id="bHint" aria-label="تلميح"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg><span class="badge" id="hintBadge"></span></button>
+    </header>
+    <div class="stage" id="stage"><div class="board" id="board"><div id="cells"></div><div id="layer"></div></div></div>
+    <div class="tray" id="tray"></div>
+  </section>
+</div>
+<canvas id="fx"></canvas>
+<div id="toast"></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const AR = '٠١٢٣٤٥٦٧٨٩';
+const ar = n => String(n).replace(/\d/g, d => AR[d]);
+const rand = (a, b) => a + Math.random() * (b - a);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+};
+// الصوت والاهتزاز مشتركان مع إعدادات الدومينو
+const S = Object.assign({ sound: true, vib: true }, store.get('domino.settings', {}));
+const saveS = () => { const all = store.get('domino.settings', {}); all.sound = S.sound; store.set('domino.settings', all); };
+const vib = p => { if (S.vib && navigator.vibrate) try { navigator.vibrate(p); } catch (e) { } };
+const STAR = (on, cls = '') => `<svg viewBox="0 0 24 24" class="${cls}"><path d="M12 2.6l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17.2l-5.9 3.2 1.3-6.5L2.5 9.4l6.6-.8z" fill="${on ? '#ffd54a' : 'rgba(255,255,255,.18)'}" stroke="${on ? '#c98a12' : 'none'}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+
+// ================= الصوت =================
+const Snd = (() => {
+  let ctx, master, noiseBuf;
+  function init() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = .7; master.connect(ctx.destination);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * .4, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  function tone(f, t0, dur, type, vol, f2) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + .01); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + .05);
+  }
+  function noise(t0, dur, freq, q, vol) {
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    s.connect(f).connect(g).connect(master); s.start(t0); s.stop(t0 + dur + .02);
+  }
+  const fx = {
+    pick(t) { tone(420, t, .1, 'sine', .12, 720); noise(t, .04, 3000, 2, .15); },
+    snap(t) { noise(t, .05, 2200, 1.4, .7); tone(240, t, .12, 'sine', .3, 110); tone(880, t + .02, .08, 'triangle', .05); },
+    back(t) { tone(500, t, .12, 'sine', .08, 300); },
+    rotate(t) { noise(t, .09, 3600, 1, .25); tone(700, t, .06, 'triangle', .05, 1000); },
+    nope(t) { tone(190, t, .14, 'square', .04, 140); },
+    btn(t) { tone(560, t, .07, 'sine', .09, 780); },
+    hint(t) { [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * .06, .3, 'triangle', .06)); },
+    star(t) { tone(1319, t, .35, 'triangle', .1); tone(1976, t + .03, .4, 'sine', .05); },
+    win(t) { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, t + i * .09, .5, 'triangle', .13)); }
+  };
+  return {
+    play(n) { if (!S.sound) return; init(); if (!ctx) return; if (ctx.state === 'suspended') ctx.resume(); try { fx[n](ctx.currentTime + .005); } catch (e) { } },
+    suspend() { if (ctx && ctx.state === 'running') ctx.suspend(); }
+  };
+})();
+
+// ================= الجزيئات =================
+const FX = (() => {
+  const cv = $('#fx'), cx = cv.getContext('2d'); let parts = [], running = false, dpr = 1;
+  function resize() { dpr = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; }
+  addEventListener('resize', resize); resize();
+  function loop() {
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(p => p.life > 0);
+    for (const p of parts) {
+      p.vx *= p.drag; p.vy = p.vy * p.drag + p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life--;
+      const a = Math.min(1, p.life / p.fade); cx.globalAlpha = a; cx.fillStyle = p.c;
+      if (p.rect) { cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.scale(1, Math.cos(p.rot * 3)); cx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); cx.restore(); }
+      else { cx.globalCompositeOperation = 'lighter'; cx.beginPath(); cx.arc(p.x, p.y, p.s * (.4 + .6 * a), 0, 7); cx.fill(); cx.globalCompositeOperation = 'source-over'; }
+    }
+    cx.globalAlpha = 1;
+    if (parts.length) requestAnimationFrame(loop); else { running = false; cx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+  function add(p) { parts.push(Object.assign({ rot: 0, vr: 0, drag: .95, g: 0, fade: 20 }, p)); if (!running) { running = true; requestAnimationFrame(loop); } }
+  const CONF = ['#ffd54a', '#ff6b7a', '#5fd38a', '#6ec6ff', '#c39bff', '#ffffff', '#ffb37a'];
+  return {
+    sparks(x, y, n = 18, colors = ['#fff', '#ffe08a'], power = 5) {
+      for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, s = rand(power * .3, power);
+        add({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, g: .06, s: rand(1.5, 3.2), c: colors[i % colors.length], life: rand(25, 50), fade: 20 }); }
+    },
+    confetti(n = 160) {
+      for (let i = 0; i < n; i++)
+        add({ x: rand(0, innerWidth), y: rand(-innerHeight * .4, -10), vx: rand(-1.5, 1.5), vy: rand(2, 5), g: .05, drag: .99, s: rand(7, 12),
+          c: CONF[i % CONF.length], life: rand(150, 240), fade: 50, rot: rand(0, 6), vr: rand(-.15, .15), rect: true });
+    }
+  };
+})();
+
+// ================= توليد المراحل =================
+// كل مرحلة تُولَّد من بذرة ثابتة: لوحة مقسّمة عشوائياً إلى قطع، فالحل مضمون دائماً.
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const LEVELS = 100;
+const DIFFS = {
+  easy:   { name: 'سهل', sub: 'قطع واضحة بدون تدوير', d: ['#7ee081', '#1f8f55'], rot: false, minS: 3, maxS: 5, base: 4, mask: i => i >= 45, par: 6, seed: 101 },
+  medium: { name: 'متوسط', sub: 'أشكال متنوعة مع التدوير', d: ['#ffcf6b', '#e07a12'], rot: true, minS: 3, maxS: 5, base: 5, mask: i => i >= 8, par: 9, seed: 202 },
+  hard:   { name: 'صعب', sub: 'ألواح كبيرة وقطع معقّدة', d: ['#ff8a96', '#c42a4a'], rot: true, minS: 4, maxS: 6, base: 7, mask: () => true, par: 12, seed: 303 }
+};
+const CHAPTERS = ['البداية', 'الانطلاق', 'التحدّي', 'المهارة', 'الإتقان'];
+const PALETTE = [['#ff8a80', '#e53950'], ['#ffd166', '#ef8a00'], ['#7ee081', '#25964a'], ['#6ec6ff', '#1f6fd1'], ['#c39bff', '#7440e0'],
+  ['#ff9de2', '#cf3399'], ['#5ff2d6', '#0f9c84'], ['#ffb37a', '#de5c18'], ['#b4ee6f', '#58a01b'], ['#9fb4ff', '#4659d6'],
+  ['#ffe08a', '#c79a0c'], ['#8ef0ff', '#1793b3'], ['#e2b8ff', '#9a35e6'], ['#ffa3a3', '#c9283c'], ['#fdba74', '#bf3f0b'], ['#93c5fd', '#2a5fe0']];
+const N4 = (r, c) => [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+
+function makeMask(w, h, rng) {
+  const m = Array.from({ length: h }, () => Array(w).fill(true));
+  const kind = Math.floor(rng() * 6), cx = (w - 1) / 2, cy = (h - 1) / 2, mn = Math.min(w, h);
+  const cut = (r, c) => { if (r >= 0 && r < h && c >= 0 && c < w) m[r][c] = false; };
+  if (kind === 0) {            // زوايا مقصوصة
+    const s = mn >= 7 && rng() < .6 ? 2 : 1;
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      const dr = Math.min(r, h - 1 - r), dc = Math.min(c, w - 1 - c); if (dr + dc < s) m[r][c] = false; }
+  } else if (kind === 1) {     // صليب
+    const s = Math.max(1, Math.floor(mn / 3) - (mn >= 8 ? 1 : 0));
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) if ((r < s || r >= h - s) && (c < s || c >= w - s)) m[r][c] = false;
+  } else if (kind === 2) {     // معيّن مشطوف
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) if (Math.abs(r - cy) / (cy + .5) + Math.abs(c - cx) / (cx + .5) > 1.3) m[r][c] = false;
+  } else if (kind === 3) {     // فتحة في الوسط
+    const s = mn >= 7 ? 2 : 1;
+    for (let r = Math.floor(cy - (s - 1) / 2); r < Math.floor(cy - (s - 1) / 2) + s; r++) for (let c = Math.floor(cx - (s - 1) / 2); c < Math.floor(cx - (s - 1) / 2) + s; c++) cut(r, c);
+  } else if (kind === 4) {     // قضمات متناظرة على الحواف
+    const k = 1 + Math.floor(rng() * 3);
+    for (let i = 0; i < k; i++) {
+      const side = Math.floor(rng() * 2), p = 1 + Math.floor(rng() * (side ? h - 2 : w - 2));
+      if (side) { cut(p, 0); cut(p, w - 1); } else { cut(0, p); cut(h - 1, w - 1 - p); }
+    }
+  } else {                     // حرف U
+    const nw = Math.max(1, Math.floor(w / 3)), nd = Math.max(1, Math.floor(h / 3) - 1), x0 = Math.floor((w - nw) / 2);
+    for (let r = 0; r < nd; r++) for (let c = x0; c < x0 + nw; c++) m[r][c] = false;
+  }
+  // يجب أن تبقى اللوحة قطعة واحدة متصلة
+  const cells = []; for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) if (m[r][c]) cells.push([r, c]);
+  const seen = new Set([cells[0].join()]), st = [cells[0]];
+  while (st.length) { const [r, c] = st.pop(); for (const [a, b] of N4(r, c)) if (a >= 0 && a < h && b >= 0 && b < w && m[a][b] && !seen.has(a + ',' + b)) { seen.add(a + ',' + b); st.push([a, b]); } }
+  if (seen.size !== cells.length || cells.length < 10) return Array.from({ length: h }, () => Array(w).fill(true));
+  return m;
+}
+
+function partition(m, w, h, rng, minS, maxS) {
+  const cells = []; for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) if (m[r][c]) cells.push([r, c]);
+  for (let att = 0; att < 400; att++) {
+    const own = Array.from({ length: h }, () => Array(w).fill(-1)), pieces = [];
+    const free = (r, c) => r >= 0 && r < h && c >= 0 && c < w && m[r][c] && own[r][c] < 0;
+    const deg = (r, c) => N4(r, c).filter(([a, b]) => free(a, b)).length;
+    let left = cells.length, ok = true;
+    while (left > 0) {
+      let start = null, bd = 99;
+      for (const [r, c] of cells) if (free(r, c)) { const d = deg(r, c) + rng() * .9; if (d < bd) { bd = d; start = [r, c]; } }
+      let target = minS + Math.floor(rng() * (maxS - minS + 1));
+      if (left - target > 0 && left - target < minS) target = left <= maxS ? left : left - minS;
+      const pc = [start]; own[start[0]][start[1]] = pieces.length;
+      while (pc.length < target) {
+        const fr = [];
+        for (const [r, c] of pc) for (const [a, b] of N4(r, c)) if (free(a, b) && !fr.some(f => f[0] === a && f[1] === b)) fr.push([a, b]);
+        if (!fr.length) break;
+        let best = null, bs = 1e9;
+        for (const f of fr) { const s = deg(f[0], f[1]) + rng() * 2.2; if (s < bs) { bs = s; best = f; } }
+        own[best[0]][best[1]] = pieces.length; pc.push(best);
+      }
+      left -= pc.length;
+      if (pc.length < minS) { ok = false; break; }
+      pieces.push(pc);
+    }
+    if (ok) return pieces;
+  }
+  return null;
+}
+
+function genLevel(diff, i) {
+  const D = DIFFS[diff], rng = mulberry32(D.seed * 100003 + i * 7919 + 17);
+  const n = D.base + Math.floor(i / 34), w = n, h = n + (i % 3 === 1 ? 1 : 0);
+  let m = D.mask(i) ? makeMask(w, h, rng) : Array.from({ length: h }, () => Array(w).fill(true));
+  let parts = partition(m, w, h, rng, D.minS, D.maxS) || partition(m, w, h, rng, D.minS - 1, D.maxS + 1);
+  if (!parts) { m = Array.from({ length: h }, () => Array(w).fill(true)); parts = partition(m, w, h, rng, 2, D.maxS + 1); }
+  const cols = PALETTE.slice(); for (let k = cols.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); [cols[k], cols[j]] = [cols[j], cols[k]]; }
+  const pieces = parts.map((pc, k) => {
+    const r0 = Math.min(...pc.map(x => x[0])), c0 = Math.min(...pc.map(x => x[1]));
+    return { id: k, cells: pc.map(([r, c]) => [r - r0, c - c0]), sol: { r: r0, c: c0 }, color: cols[k % cols.length], rot0: D.rot ? Math.floor(rng() * 4) : 0 };
+  });
+  const order = pieces.map(p => p.id); for (let k = order.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
+  const cells = []; for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) if (m[r][c]) cells.push([r, c]);
+  return { diff, i, w, h, cells, pieces, order };
+}
+
+// ================= أشكال القطع =================
+function rotCells(cs, k) {
+  for (let n = 0; n < k; n++) { const H = Math.max(...cs.map(x => x[0])) + 1; cs = cs.map(([r, c]) => [c, H - 1 - r]); }
+  return cs;
+}
+const shape = p => rotCells(p.cells, p.rot);
+const dims = cs => ({ W: Math.max(...cs.map(x => x[1])) + 1, H: Math.max(...cs.map(x => x[0])) + 1 });
+function cellsHTML(cs) {
+  const set = new Set(cs.map(([r, c]) => r + ',' + c)), n = (a, b) => set.has(a + ',' + b);
+  return cs.map(([r, c]) => {
+    const k = (n(r - 1, c) ? '' : ' t') + (n(r + 1, c) ? '' : ' b') + (n(r, c - 1) ? '' : ' l') + (n(r, c + 1) ? '' : ' r');
+    return `<i class="${k}" style="top:${r}em;left:${c}em;background-position:${-c}em ${-r}em"></i>`;
+  }).join('');
+}
+function pieceHTML(cs, color, style = '', cls = '') {
+  const { W, H } = dims(cs);
+  return `<div class="pc ${cls}" style="width:${W}em;height:${H}em;--W:${W}em;--H:${H}em;--c1:${color[0]};--c2:${color[1]};${style}">${cellsHTML(cs)}</div>`;
+}
+
+// ================= التقدم =================
+const PROG = store.get('puzzle.progress', {});
+for (const k in DIFFS) PROG[k] = Object.assign({ u: 1, s: {}, b: {} }, PROG[k]);
+const saveProg = () => store.set('puzzle.progress', PROG);
+const starsOf = k => Object.values(PROG[k].s).reduce((a, b) => a + b, 0);
+const doneOf = k => Object.keys(PROG[k].s).length;
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const tm = s => `<bdi dir="ltr">${ar(fmt(s))}</bdi>`;
+
+// ================= الشاشات =================
+const RT = { screen: 'home', modal: null, diff: 'easy' };
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); RT.screen = id; }
+function toast(t) { $('#toast').innerHTML = `<div>${t}</div>`; }
+
+function renderHome() {
+  const tot = Object.keys(DIFFS).reduce((a, k) => a + starsOf(k), 0);
+  $('#total').innerHTML = `<div class="chip">${STAR(true)} ${ar(tot)} / ${ar(LEVELS * 9)}</div>`;
+  const icons = { easy: [[0, 0], [0, 1], [1, 0], [1, 1]], medium: [[0, 0], [1, 0], [1, 1], [2, 1]], hard: [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]] };
+  $('#diffs').innerHTML = Object.entries(DIFFS).map(([k, D]) => {
+    const done = doneOf(k);
+    return `<button class="dcard" data-diff="${k}" style="--d1:${D.d[0]};--d2:${D.d[1]}">
+      <div class="art">${pieceHTML(icons[k], ['#ffffff', '#e8e8f5'])}</div>
+      <div class="info"><b>${D.name}</b><span>${D.sub}</span><div class="prog"><em style="width:${done / LEVELS * 100}%"></em></div></div>
+      <div class="num">${ar(done)}<small>من ${ar(LEVELS)}</small></div></button>`;
+  }).join('');
+  document.querySelectorAll('[data-diff]').forEach(b => b.onclick = () => { Snd.play('btn'); openLevels(b.dataset.diff); });
+  $('#sndWave').style.display = S.sound ? '' : 'none';
+}
+function buildArt() {
+  const parts = [{ cs: [[0, 0], [0, 1], [1, 0]], at: [0, 0], col: PALETTE[0], d: [-60, -40, -40] },
+    { cs: [[0, 1], [1, 0], [1, 1], [2, 1]], at: [0, 1], col: PALETTE[3], d: [70, -30, 50] },
+    { cs: [[0, 0], [0, 1]], at: [2, 0], col: PALETTE[1], d: [-20, 70, 30] }];
+  $('#logoArt').innerHTML = parts.map((p, k) => pieceHTML(p.cs, p.col, `top:${p.at[0]}em;left:${p.at[1]}em;--dx:${p.d[0]}px;--dy:${p.d[1]}px;--rr:${p.d[2]}deg;animation-delay:${k * .12}s`)).join('');
+  const shapes = [[[0, 0], [0, 1], [0, 2], [1, 1]], [[0, 0], [1, 0], [2, 0], [2, 1]], [[0, 0], [0, 1], [1, 1], [1, 2]], [[0, 0], [0, 1], [1, 0], [1, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 0], [1, 1], [1, 2], [2, 1]]];
+  let html = '';
+  for (let i = 0; i < 12; i++) {
+    const s = rand(12, 26) | 0;
+    html += pieceHTML(shapes[i % shapes.length], PALETTE[(i * 5) % PALETTE.length],
+      `font-size:${s}px;left:${rand(-5, 92)}%;top:0;opacity:${(s / 26 * .45).toFixed(2)};--d:${rand(18, 32)}s;--dl:-${rand(0, 32)}s;--dx:${rand(-60, 60)}px;--r0:${rand(-90, 90)}deg;--r1:${rand(-260, 260)}deg;${s < 16 ? 'filter:blur(1.5px);' : ''}`);
+  }
+  $('#floaty').innerHTML = html;
+}
+
+function openLevels(diff) {
+  RT.diff = diff; const D = DIFFS[diff], P = PROG[diff];
+  $('#lvTitle').textContent = D.name; $('#lvSub').textContent = `${ar(doneOf(diff))} من ${ar(LEVELS)} مرحلة`;
+  $('#lvStars').innerHTML = `${STAR(true)} ${ar(starsOf(diff))}`;
+  let html = '';
+  for (let c = 0; c < LEVELS / 20; c++) {
+    const n = D.base + Math.floor(c * 20 / 34);
+    html += `<div class="chap">الفصل ${ar(c + 1)} • ${CHAPTERS[c]} <small>لوحة ${ar(n)}×${ar(n)}</small></div><div class="grid">`;
+    for (let i = c * 20; i < c * 20 + 20; i++) {
+      const locked = i >= P.u, s = P.s[i] || 0, cur = i === P.u - 1 && !P.s[i];
+      html += `<button class="lv ${locked ? 'locked' : ''} ${cur ? 'cur' : ''}" data-lv="${i}" style="--d1:${D.d[0]};--d2:${D.d[1]};--i:${i % 20}">
+        <b>${ar(i + 1)}</b>${locked ? '<svg class="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>' : `<span class="st">${STAR(s > 0)}${STAR(s > 1)}${STAR(s > 2)}</span>`}</button>`;
+    }
+    html += '</div>';
+  }
+  $('#lvScroll').innerHTML = html;
+  $('#lvScroll').querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.lv;
+    if (i >= P.u) { Snd.play('nope'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); toast('أكمل المراحل السابقة أولاً'); return; }
+    Snd.play('btn'); startLevel(diff, i);
+  });
+  show('levels');
+  const cur = $('#lvScroll .cur') || $(`#lvScroll [data-lv="${Math.max(0, P.u - 1)}"]`);
+  if (cur) $('#lvScroll').scrollTop = Math.max(0, cur.offsetTop - $('#lvScroll').clientHeight / 2);
+}
+
+// ================= اللعب =================
+const G = { lv: null, pieces: [], els: {}, slots: {}, cs: 40, ts: 20, hints: 0, elapsed: 0, started: false, done: false, maskSet: null };
+
+function startLevel(diff, i) {
+  const lv = genLevel(diff, i);
+  G.lv = lv; G.hints = 0; G.elapsed = 0; G.started = false; G.done = false;
+  G.pieces = lv.pieces.map(p => Object.assign({}, p, { rot: p.rot0, place: null, locked: false }));
+  G.maskSet = new Set(lv.cells.map(([r, c]) => r + ',' + c));
+  G.els = {}; $('#layer').innerHTML = ''; $('#tray').innerHTML = '';
+  $('#plTitle').textContent = `المرحلة ${ar(i + 1)}`;
+  $('#plSub').textContent = `${DIFFS[diff].name} • ${ar(lv.pieces.length)} قطع`;
+  $('#clock').textContent = ar('0:00'); $('#hintBadge').textContent = '';
+  show('play');
+  layoutPlay(true);
+  if (diff !== 'easy' && i < 3) setTimeout(() => toast('المس القطعة لتدويرها'), 700);
+}
+
+// يحسب حجم الخلية في اللوحة وحجم القطع في الصينية بحيث يظهر كل شيء
+function layoutPlay(intro) {
+  const lv = G.lv, st = $('#play'), W = st.clientWidth, top = st.querySelector('.top').offsetHeight;
+  const avail = st.clientHeight - top - parseFloat(getComputedStyle(st).paddingTop);
+  const trayH = Math.max(150, Math.min(avail * .4, avail - 240));
+  G.cs = Math.floor(Math.min((W - 40) / lv.w, (avail - trayH - 30) / lv.h, 60));
+  const tray = $('#tray'); tray.style.height = trayH + 'px';
+  const TW = W - 20, TH = trayH - 20 - (parseFloat(getComputedStyle(tray).paddingBottom) - 10);
+  const box = p => { const { W, H } = dims(p.cells); const m = Math.max(W, H); return DIFFS[lv.diff].rot ? [m, m] : [W, H]; };
+  const fitsTray = ts => {
+    const g = Math.max(6, ts * .45); let rowW = 0, rowH = 0, tot = 0;
+    for (const id of lv.order) { const [w, h] = box(G.pieces[id]); const pw = w * ts, ph = h * ts;
+      if (rowW && rowW + g + pw > TW) { tot += rowH + g; rowW = 0; rowH = 0; }
+      rowW += (rowW ? g : 0) + pw; rowH = Math.max(rowH, ph); }
+    return tot + rowH <= TH;
+  };
+  let ts = Math.min(G.cs * .7, 34); while (ts > 7 && !fitsTray(ts)) ts -= .5;
+  G.ts = ts;
+  tray.style.gap = Math.max(6, ts * .45) + 'px';
+  const board = $('#board');
+  board.style.fontSize = G.cs + 'px'; board.style.width = lv.w + 'em'; board.style.height = lv.h + 'em';
+  $('#cells').innerHTML = lv.cells.map(([r, c]) => `<div class="bc" data-k="${r},${c}" style="top:${r}em;left:${c}em"></div>`).join('');
+  tray.innerHTML = ''; G.slots = {};
+  lv.order.forEach((id, k) => {
+    const [w, h] = box(G.pieces[id]), s = document.createElement('div');
+    s.className = 'slot'; s.style.width = w * ts + 'px'; s.style.height = h * ts + 'px';
+    tray.appendChild(s); G.slots[id] = s;
+  });
+  G.pieces.forEach((p, k) => { mount(p); if (intro) { const el = G.els[p.id]; el.classList.add('pop'); el.style.setProperty('--i', lv.order.indexOf(p.id)); setTimeout(() => el.classList.remove('pop'), 1600); } });
+}
+
+function mount(p) {
+  let el = G.els[p.id];
+  if (!el) {
+    el = document.createElement('div'); el.className = 'pc'; el.dataset.id = p.id;
+    el.style.setProperty('--c1', p.color[0]); el.style.setProperty('--c2', p.color[1]); G.els[p.id] = el;
+  }
+  const cs = shape(p), { W, H } = dims(cs);
+  el.innerHTML = cellsHTML(cs);
+  el.style.width = W + 'em'; el.style.height = H + 'em'; el.style.setProperty('--W', W + 'em'); el.style.setProperty('--H', H + 'em');
+  el.classList.toggle('locked', !!p.locked);
+  if (p.place) {
+    el.style.fontSize = ''; el.style.left = p.place.c + 'em'; el.style.top = p.place.r + 'em';
+    $('#layer').appendChild(el);
+  } else {
+    const s = G.slots[p.id];
+    el.style.fontSize = G.ts + 'px';
+    el.style.left = (s.offsetWidth - W * G.ts) / 2 + 'px'; el.style.top = (s.offsetHeight - H * G.ts) / 2 + 'px';
+    s.appendChild(el);
+  }
+  return el;
+}
+function animFrom(el, from, dur = 260) {
+  const to = el.getBoundingClientRect();
+  el.animate([{ transform: `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width || 1})`, transformOrigin: 'top left' },
+    { transform: 'none', transformOrigin: 'top left' }], { duration: dur, easing: 'cubic-bezier(.2,.8,.3,1.15)' });
+}
+
+function occ(except) {
+  const o = new Map();
+  for (const p of G.pieces) if (p.place && p !== except) for (const [r, c] of shape(p)) o.set((p.place.r + r) + ',' + (p.place.c + c), p.id);
+  return o;
+}
+function fits(p, r, c) {
+  const o = occ(p);
+  return shape(p).every(([a, b]) => { const k = (r + a) + ',' + (c + b); return G.maskSet.has(k) && !o.has(k); });
+}
+function preview(p, at) {
+  document.querySelectorAll('.bc.pv').forEach(e => e.classList.remove('pv'));
+  if (!p || !at) return;
+  $('#board').style.setProperty('--pc', p.color[0] + 'aa');
+  for (const [a, b] of shape(p)) { const e = $(`.bc[data-k="${at.r + a},${at.c + b}"]`); if (e) e.classList.add('pv'); }
+}
+
+function startClock() { if (!G.started && !G.done) { G.started = true; G.last = performance.now(); } }
+setInterval(() => {
+  const now = performance.now();
+  if (G.started && !G.done && RT.screen === 'play' && !document.hidden && !RT.modal) { G.elapsed += (now - G.last) / 1000; $('#clock').textContent = ar(fmt(G.elapsed)); }
+  G.last = now;
+}, 250);
+
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('#play .pc'); if (!el || G.done || RT.modal) return;
+  const p = G.pieces[+el.dataset.id];
+  if (p.locked) { Snd.play('nope'); el.animate([{ transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'none' }], 200); return; }
+  e.preventDefault(); startClock();
+  const r0 = el.getBoundingClientRect(), gx = (e.clientX - r0.left) / r0.width, gy = (e.clientY - r0.top) / r0.height;
+  const sx = e.clientX, sy = e.clientY, lift = e.pointerType === 'mouse' ? 0 : Math.max(36, G.cs * .9);
+  let clone = null, at = null;
+  const move = ev => {
+    if (!clone) {
+      if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 7) return;
+      clone = el.cloneNode(true); clone.classList.remove('pop'); clone.classList.add('dragging');
+      clone.style.fontSize = G.cs + 'px'; document.body.appendChild(clone); el.style.visibility = 'hidden';
+      Snd.play('pick'); vib(8);
+    }
+    const W = clone.offsetWidth, H = clone.offsetHeight, x = ev.clientX - gx * W, y = ev.clientY - gy * H - lift;
+    clone.style.left = x + 'px'; clone.style.top = y + 'px';
+    const br = $('#board').getBoundingClientRect();
+    const c = Math.round((x - br.left) / G.cs), r = Math.round((y - br.top) / G.cs);
+    at = fits(p, r, c) ? { r, c } : null; preview(p, at);
+  };
+  const up = ev => {
+    document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+    if (!clone) { if (ev.type === 'pointerup') rotate(p); return; }
+    preview(null);
+    const from = clone.getBoundingClientRect(); clone.remove(); el.style.visibility = '';
+    if (at) {
+      p.place = at; mount(p); animFrom(el, from, 180);
+      Snd.play('snap'); vib(12);
+      const r = el.getBoundingClientRect(); FX.sparks(r.left + r.width / 2, r.top + r.height / 2, 12, [p.color[0], '#fff']);
+      checkWin();
+    } else {
+      const wasOn = !!p.place; p.place = null; mount(p); animFrom(el, from, 300);
+      Snd.play(wasOn ? 'back' : 'nope');
+    }
+  };
+  document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+});
+
+function rotate(p) {
+  const el = G.els[p.id];
+  if (!DIFFS[G.lv.diff].rot) { Snd.play('nope'); el.animate([{ transform: 'rotate(-8deg)' }, { transform: 'rotate(8deg)' }, { transform: 'none' }], 220); return; }
+  p.rot = (p.rot + 1) % 4;
+  if (p.place && !fits(p, p.place.r, p.place.c)) p.place = null;
+  mount(p); Snd.play('rotate');
+  el.animate([{ transform: 'rotate(-90deg) scale(.9)' }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.3,1.3)' });
+  if (p.place) checkWin();
+}
+
+function correct(p) {
+  if (!p.place) return false;
+  const a = new Set(shape(p).map(([r, c]) => (p.place.r + r) + ',' + (p.place.c + c)));
+  return p.cells.every(([r, c]) => a.has((p.sol.r + r) + ',' + (p.sol.c + c)));
+}
+function hint() {
+  if (G.done) return;
+  const cand = G.pieces.filter(p => !correct(p)).sort((a, b) => b.cells.length - a.cells.length || a.id - b.id);
+  if (!cand.length) return;
+  const p = cand[0], target = new Set(p.cells.map(([r, c]) => (p.sol.r + r) + ',' + (p.sol.c + c)));
+  startClock();
+  for (const q of G.pieces) if (q !== p && q.place && shape(q).some(([r, c]) => target.has((q.place.r + r) + ',' + (q.place.c + c)))) {
+    const f = G.els[q.id].getBoundingClientRect(); q.place = null; q.locked = false; animFrom(mount(q), f, 300);
+  }
+  const from = G.els[p.id].getBoundingClientRect();
+  p.rot = 0; p.place = { r: p.sol.r, c: p.sol.c }; p.locked = true;
+  const el = mount(p); animFrom(el, from, 420);
+  G.hints++; $('#hintBadge').textContent = ar(G.hints);
+  Snd.play('hint'); vib(15);
+  setTimeout(() => { const r = el.getBoundingClientRect(); FX.sparks(r.left + r.width / 2, r.top + r.height / 2, 30, ['#fff', '#ffe08a', p.color[0]], 6); }, 300);
+  checkWin();
+}
+function resetLevel() {
+  for (const p of G.pieces) { p.place = null; p.locked = false; p.rot = p.rot0; }
+  layoutPlay(true); Snd.play('back');
+}
+
+function checkWin() {
+  if (occ(null).size !== G.maskSet.size) return;
+  G.done = true;
+  const lv = G.lv, D = DIFFS[lv.diff], t = G.elapsed, par = lv.pieces.length * D.par + 10;
+  const stars = G.hints === 0 && t <= par ? 3 : (G.hints <= 1 && t <= par * 2 ? 2 : 1);
+  const P = PROG[lv.diff], prevBest = P.b[lv.i];
+  P.s[lv.i] = Math.max(P.s[lv.i] || 0, stars);
+  P.b[lv.i] = prevBest ? Math.min(prevBest, t) : t;
+  P.u = Math.min(LEVELS, Math.max(P.u, lv.i + 2));
+  saveProg();
+  // موجة ضوء على القطع ثم الاحتفال
+  G.pieces.forEach(p => { const el = G.els[p.id]; el.style.setProperty('--dl', (p.place.r + p.place.c) * 45 + 'ms'); el.classList.remove('wave'); void el.offsetWidth; el.classList.add('wave'); });
+  Snd.play('win'); vib([20, 40, 60]);
+  setTimeout(() => { if (G.lv !== lv || RT.screen !== 'play') return; FX.confetti(150); winModal(stars, t, prevBest); }, 750);
+}
+
+// ================= النوافذ =================
+function openModal(html, opt = {}) {
+  $('#sheet').innerHTML = html; RT.modal = opt; $('#modal').classList.add('on'); return $('#sheet');
+}
+function closeModal() { RT.modal = null; $('#modal').classList.remove('on'); }
+function winModal(stars, t, prevBest) {
+  const lv = G.lv, last = lv.i >= LEVELS - 1;
+  const titles = ['', 'أحسنت!', 'رائع!', 'ممتاز!'];
+  const sh = openModal(`
+    <div class="stars">${[0, 1, 2].map(k => STAR(k < stars, k < stars ? 'on' : '').replace('<svg', `<svg style="animation-delay:${.15 + k * .25}s"`)).join('')}</div>
+    <h2>${titles[stars]}</h2>
+    <p>${DIFFS[lv.diff].name} • المرحلة ${ar(lv.i + 1)}${G.hints ? ` • ${ar(G.hints)} تلميح` : ''}</p>
+    <div class="res"><div class="chip">الوقت ${tm(t)}</div>${prevBest && prevBest < t ? `<div class="chip">الأفضل ${tm(prevBest)}</div>` : (prevBest ? '<div class="chip">رقم قياسي جديد!</div>' : '')}</div>
+    <div class="col">
+      ${last ? `<button class="btn" data-a="levels">أنهيت كل مراحل ${DIFFS[lv.diff].name}! 🏆</button>` : '<button class="btn" data-a="next">المرحلة التالية</button>'}
+      <div class="row2"><button class="btn glass" data-a="replay">إعادة</button><button class="btn glass" data-a="levels">المراحل</button></div>
+    </div>`);
+  for (let k = 0; k < stars; k++) setTimeout(() => Snd.play('star'), 150 + k * 250);
+  sh.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    Snd.play('btn'); closeModal(); const a = b.dataset.a;
+    if (a === 'next') startLevel(lv.diff, lv.i + 1);
+    if (a === 'replay') startLevel(lv.diff, lv.i);
+    if (a === 'levels') openLevels(lv.diff);
+  });
+}
+
+// ================= الأزرار والتنقل =================
+$('#bToDomino').onclick = () => { Snd.play('btn'); location.href = 'index.html'; };
+$('#bSound').onclick = () => { S.sound = !S.sound; saveS(); renderHome(); Snd.play('btn'); };
+$('#bLvBack').onclick = () => { Snd.play('btn'); renderHome(); show('home'); };
+$('#bPlayBack').onclick = () => { Snd.play('btn'); openLevels(G.lv.diff); };
+$('#bHint').onclick = hint;
+$('#bReset').onclick = () => { if (!G.done) resetLevel(); };
+$('#modal').addEventListener('pointerdown', e => { if (e.target.id === 'modal' && G.done) { closeModal(); openLevels(G.lv.diff); } });
+
+let rzT;
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { if (RT.screen === 'play' && G.lv) layoutPlay(false); }, 120); });
+
+// يستدعيهما تطبيق أندرويد
+window.hakimBack = () => {
+  if (RT.modal) { closeModal(); if (G.done) openLevels(G.lv.diff); return true; }
+  if (RT.screen === 'play') { openLevels(G.lv.diff); return true; }
+  if (RT.screen === 'levels') { renderHome(); show('home'); return true; }
+  location.href = 'index.html'; return true;
+};
+window.hakimPause = () => Snd.suspend();
+
+buildArt(); renderHome();
+const q = new URLSearchParams(location.search);
+if (q.get('lv')) startLevel(q.get('d') || 'easy', +q.get('lv') - 1);
+</script>
+</body>
+</html>
