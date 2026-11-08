@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#062519">
+<title>دومينو حكيم — الطاولة الملكية</title>
+<meta name="description" content="دومينو حكيم: العب ضد الكمبيوتر أو فريقين ٢ ضد ٢، ومعها لعبة «تركيب» بـ300 مرحلة. حمّلها مجاناً لأندرويد أو العبها من المتصفح.">
+<meta property="og:title" content="دومينو حكيم — الطاولة الملكية">
+<meta property="og:description" content="دومينو ضد الكمبيوتر أو فريقين، ولعبة تركيب بـ300 مرحلة. حمّلها مجاناً لأندرويد أو العبها من المتصفح.">
+<meta property="og:image" content="https://momabdu7777-maker.github.io/hakim-domino/icon.png">
+<meta property="og:url" content="https://momabdu7777-maker.github.io/hakim-domino/">
+<meta property="og:type" content="website">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --felt-c:#062519;--felt-b:#0d4430;--felt-a:#1f7a52;
+  --card:#0b3325;--card-2:#10432f;
+  --gold:#f2c14e;--gold-2:#d4952b;--gold-3:#8a5a14;
+  --violet:#6d4bd8;
+  --text:#f7f0e1;--muted:#b5cabd;--line:rgba(255,255,255,.13);
+  --face-a:#fffdf6;--face-b:#ebdfc2;--edge:#958159;--pip:#17130e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--felt-c)}
+body{
+  min-height:100vh;color:var(--text);font-family:'Tajawal',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;line-height:1.7;
+  background:
+    radial-gradient(ellipse 90% 480px at 50% 0,rgba(31,122,82,.9),transparent 75%),
+    var(--felt-c);
+}
+main{max-width:600px;margin:0 auto;padding:36px 16px 40px;text-align:center}
+
+/* Hero: the same fan of tiles as the game's menu */
+.fan{display:block;width:210px;height:auto;margin:0 auto;overflow:visible;filter:drop-shadow(0 16px 22px rgba(0,0,0,.45))}
+.fan .t{transform-box:fill-box;transform-origin:50% 100%}
+.fan .t1{transform:rotate(-17deg) translate(-8px,6px)}
+.fan .t3{transform:rotate(17deg) translate(8px,6px)}
+.fan .t2{animation:lift 3.4s ease-in-out infinite}
+@keyframes lift{50%{transform:translateY(-8px)}}
+
+h1{
+  font-family:'Lalezar','Tajawal',sans-serif;font-weight:400;font-size:clamp(58px,17vw,84px);line-height:1.15;margin-top:12px;
+  background:linear-gradient(180deg,#ffe6a0,var(--gold) 45%,var(--gold-2));-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.sub{display:inline-block;border:1px solid rgba(242,193,78,.35);background:rgba(0,0,0,.28);border-radius:999px;padding:2px 16px;font-size:14px;color:var(--gold);font-weight:700}
+.tag{color:var(--muted);font-size:17px;margin-top:12px}
+.stats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:22px 0 26px}
+.stats span{border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:14px;background:rgba(0,0,0,.2)}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;padding:14px 20px;border-radius:18px;font-weight:800;font-size:19px;text-decoration:none;transition:transform .15s}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible,a:focus-visible,.shots:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.primary{background:linear-gradient(180deg,#ffd976,var(--gold) 50%,var(--gold-2));color:#3a2606;box-shadow:0 5px 0 var(--gold-3),0 14px 26px rgba(0,0,0,.35)}
+.secondary{margin-top:16px;border:1px solid var(--line);color:var(--text);background:rgba(255,255,255,.09)}
+.meta{font-size:13px;color:var(--muted);margin-top:14px}
+
+.shots{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:30px -16px 0;padding:4px 16px 14px;scrollbar-width:thin;scrollbar-color:var(--felt-a) transparent}
+.shots img{flex:0 0 auto;width:min(48vw,210px);height:auto;aspect-ratio:1/2;border-radius:22px;border:3px solid rgba(255,255,255,.14);scroll-snap-align:center;background:var(--card);box-shadow:0 12px 26px rgba(0,0,0,.35)}
+
+section{text-align:right;margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+h2{font-size:18px;color:var(--gold);margin-bottom:12px;font-weight:800}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{background:var(--card-2);border-radius:14px;padding:14px 12px;text-align:center}
+.mode b{display:block;font-size:15px}
+.mode small{display:block;color:var(--muted);font-size:13px;line-height:1.55;margin-top:2px}
+.mode .e{font-size:30px;line-height:1.3}
+h3{font-size:15px;font-weight:800;margin:16px 0 8px}
+h3:first-of-type{margin-top:0}
+.feats{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.feats li{background:var(--card-2);border-radius:12px;padding:10px 12px;font-size:14px}
+ol{padding-right:20px}
+li{margin:6px 0}
+.feats li{margin:0}
+.note{font-size:14px;color:var(--muted);margin-top:10px}
+section>.note:first-of-type{margin-top:0}
+ol+.note{margin-top:10px}
+code{direction:ltr;display:block;text-align:left;font-size:11px;word-break:break-all;color:var(--muted);background:var(--felt-c);border-radius:8px;padding:8px;margin-top:6px}
+footer{margin-top:32px;font-size:13px;color:var(--muted)}
+@media (max-width:380px){.feats,.modes{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.fan .t2{animation:none}.btn{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <svg class="fan" viewBox="-24 -8 188 150" aria-hidden="true">
+    <defs>
+      <linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#ebdfc2"/></linearGradient>
+      <g id="tile">
+        <rect x="0" y="4" width="64" height="124" rx="9" fill="#958159"/>
+        <rect x="0" y="0" width="64" height="124" rx="9" fill="url(#face)"/>
+        <rect x="9" y="60.5" width="46" height="3" rx="1.5" fill="#5a421e" opacity=".45"/>
+        <circle cx="32" cy="62" r="3.4" fill="#d4952b"/>
+      </g>
+    </defs>
+    <g class="t t1" fill="#17130e">
+      <use href="#tile"/>
+      <circle cx="18" cy="16" r="5"/><circle cx="46" cy="16" r="5"/><circle cx="32" cy="30" r="5"/><circle cx="18" cy="44" r="5"/><circle cx="46" cy="44" r="5"/>
+      <circle cx="18" cy="78" r="5"/><circle cx="32" cy="92" r="5"/><circle cx="46" cy="106" r="5"/>
+    </g>
+    <g transform="translate(76 0)"><g class="t t3" fill="#17130e">
+      <use href="#tile"/>
+      <circle cx="32" cy="30" r="5"/>
+      <circle cx="18" cy="78" r="5"/><circle cx="46" cy="78" r="5"/><circle cx="18" cy="106" r="5"/><circle cx="46" cy="106" r="5"/>
+    </g></g>
+    <g transform="translate(38 -4)"><g class="t t2" fill="#17130e">
+      <use href="#tile"/>
+      <circle cx="18" cy="16" r="5"/><circle cx="46" cy="16" r="5"/><circle cx="18" cy="30" r="5"/><circle cx="46" cy="30" r="5"/><circle cx="18" cy="44" r="5"/><circle cx="46" cy="44" r="5"/>
+      <circle cx="18" cy="78" r="5"/><circle cx="46" cy="78" r="5"/><circle cx="18" cy="92" r="5"/><circle cx="46" cy="92" r="5"/><circle cx="18" cy="106" r="5"/><circle cx="46" cy="106" r="5"/>
+    </g></g>
+  </svg>
+  <h1>دومينو</h1>
+  <div class="sub">حكيم • الطاولة الملكية</div>
+  <p class="tag">نافس الكمبيوتر أو العب مع شريك ضد خصمين، ومعها لعبة «تركيب» بثلاثمئة مرحلة</p>
+
+  <div class="stats"><span>لعبتان في تطبيق واحد</span><span>3 مستويات صعوبة</span><span>300 مرحلة تركيب</span><span>5 ألوان للطاولة</span><span>مجانية</span></div>
+
+  <a class="btn primary" href="domino.apk" download="domino.apk">⬇ تحميل لأندرويد</a>
+  <p class="meta">الإصدار 1.2 · 0.5 ميغابايت · أندرويد 7 فما فوق</p>
+  <a class="btn secondary" href="play/">▶ العب الآن من المتصفح</a>
+
+  <div class="shots" tabindex="0" aria-label="صور من اللعبة">
+    <img src="shots/match.webp" width="585" height="1170" alt="مباراة فردية ضد الكمبيوتر على الطاولة الخضراء">
+    <img src="shots/teams.webp" width="585" height="1170" alt="مباراة فريقين على طاولة خشبية بأحجار سوداء" loading="lazy">
+    <img src="shots/menu.webp" width="585" height="1170" alt="القائمة الرئيسية للعبة" loading="lazy">
+    <img src="shots/setup.webp" width="585" height="1170" alt="اختيار مستوى الصعوبة وهدف المباراة" loading="lazy">
+    <img src="shots/settings.webp" width="585" height="1170" alt="الإعدادات: لون الطاولة وشكل الأحجار وسرعة اللعب" loading="lazy">
+    <img src="shots/puzzle-home.webp" width="585" height="1170" alt="لعبة تركيب: ثلاثة مستويات" loading="lazy">
+    <img src="shots/puzzle-levels.webp" width="585" height="1170" alt="مراحل لعبة تركيب مقسّمة إلى فصول" loading="lazy">
+    <img src="shots/puzzle-play.webp" width="585" height="1170" alt="مرحلة من لعبة تركيب" loading="lazy">
+  </div>
+
+  <section>
+    <h2>اختر طريقة لعبك</h2>
+    <div class="modes">
+      <div class="mode"><div class="e">🎯</div><b>ضد الكمبيوتر</b><small>مباراة فردية، 7 أحجار لكل لاعب والباقي في الكومة للسحب</small></div>
+      <div class="mode"><div class="e">🤝</div><b>فريقين 2 ضد 2</b><small>أنت وشريكك ضد خصمين، بلا كومة وبالتعاون</small></div>
+      <div class="mode"><div class="e">🧩</div><b>لعبة التركيب</b><small>رتّب القطع داخل اللوحة: 100 مرحلة لكل مستوى</small></div>
+      <div class="mode"><div class="e">⏸️</div><b>تابع لاحقاً</b><small>تُحفظ مباراتك لتكملها متى شئت</small></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ماذا في اللعبة؟</h2>
+    <h3>الدومينو</h3>
+    <ul class="feats">
+      <li>🧠 3 مستويات: سهل، متوسط، ومحترف يحسب أحجارك</li>
+      <li>🏁 اختر طول المباراة: 51 أو 101 أو 151 نقطة</li>
+      <li>🎨 5 ألوان للطاولة و3 أشكال للأحجار</li>
+      <li>⏱️ 3 سرعات للعب: هادئة، عادية، سريعة</li>
+      <li>💡 زر تلميح عندما تحتار في حركتك</li>
+      <li>👆 العب بلمسة أو اسحب الحجر إلى مكانه</li>
+      <li>📊 إحصائيات: الانتصارات وأفضل سلسلة وأعلى جولة</li>
+      <li>🔊 مؤثرات صوتية واهتزاز يمكن إيقافهما</li>
+    </ul>
+    <h3>تركيب</h3>
+    <ul class="feats">
+      <li>🧩 300 مرحلة: سهل ومتوسط وصعب</li>
+      <li>🔄 قطع تحتاج إلى تدوير في المستويات الأعلى</li>
+      <li>⭐ اجمع النجوم في كل مرحلة</li>
+      <li>💡 تلميحات وعدّاد للوقت</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>طريقة التثبيت</h2>
+    <ol>
+      <li>اضغط «تحميل لأندرويد» وانتظر حتى ينتهي التحميل.</li>
+      <li>افتح الملف <b>domino.apk</b> من الإشعارات أو من مجلد التنزيلات.</li>
+      <li>إذا ظهرت رسالة «لا يُسمح بالتثبيت من هذا المصدر»، اضغط <b>الإعدادات</b> وفعّل <b>السماح من هذا المصدر</b>، ثم ارجع واضغط <b>تثبيت</b>.</li>
+      <li>إذا ظهر تنبيه من Play Protect، اختر <b>التثبيت على أي حال</b>.</li>
+    </ol>
+    <p class="note">التطبيق يعمل بالكامل بدون إنترنت ولا يطلب إذن الوصول إليه، ولا يجمع أي بيانات، وتقدّمك محفوظ على جهازك فقط. نسخة المتصفح تحتاج إلى الإنترنت لفتحها وتحمّل خطوطها من Google Fonts.</p>
+  </section>
+
+  <section>
+    <h2>التحقق من الملف</h2>
+    <p class="note">بصمة SHA-256 للملف الرسمي:</p>
+    <code>73782ab0db70d0b141ad641d0e0844a00750ebd0b75fd60d8000f6d31f026773</code>
+  </section>
+
+  <footer>© 2026 دومينو حكيم</footer>
+</main>
+</body>
+</html>
